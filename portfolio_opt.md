@@ -36,7 +36,7 @@ The API is structured as a microservices-based architecture with the following c
 
 ## **3. Future Developments and Impacts**
 ### **3.1 High-Frequency Trading**
-This project is built as a potential solution to optimizing portoflios and is part of a greater effort to improve the field of high frequency trading. Specifically, this project could be used to better handle the volatility and unpredictable nature of 
+This project is built as a potential solution to optimizing portoflios and is part of a greater effort to improve the field of high frequency trading. Specifically, this project could be used to better handle the volatility and unpredictable nature of the markets. 
 
 ---
 
