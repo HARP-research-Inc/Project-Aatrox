@@ -12,8 +12,8 @@
 #     set(TARGET_NAME vector-add-buffers)
 # endif()
 
-set(SOURCE_FILE Aatrox.cpp)
-set(TARGET_NAME Aatrox)
+set(SOURCE_FILE Qannealer.cpp)
+set(TARGET_NAME Qannealer)
 
 # This is a Windows-specific flag that enables exception handling in host code
 if(WIN32)
