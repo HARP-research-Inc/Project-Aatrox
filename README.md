@@ -153,12 +153,12 @@ nmake clean
 ```
 
 ## Running the Simulation
-Running the simulation is simply finding the Aatrox file in the build folder. Usually it's `Aatrox.exe`.
+Running the simulation is simply finding the Aatrox file in the build folder. Usually it's `Qannealer.exe`.
 
 ### Optional CLI Flags
 
 Currently the code is configured via compile‑time constants. To customize:
-- Modify `N_SPINS`, `N_TROTTERS`, `N_ITERATIONS` in `Aatrox.cpp`
+- Modify `N_SPINS`, `N_TROTTERS`, `N_ITERATIONS` in `Qannealer.cpp`
 - Adjust coupling and temperature schedules in the same file
 - Rebuild after changes
 
