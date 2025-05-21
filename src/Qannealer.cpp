@@ -3,6 +3,9 @@
 // Includes energy logging, spin-board prints, and solution outputs
 
 #include <sycl/sycl.hpp>
+#if FPGA_HARDWARE || FPGA_EMULATOR || FPGA_SIMULATOR
+#include <sycl/ext/intel/fpga_extensions.hpp>
+#endif
 #include <vector>
 #include <random>
 #include <iostream>
@@ -21,7 +24,17 @@ public:
           Jt_start(Jt_start), Jt_end(Jt_end),
           T_start(T_start), T_end(T_end),
           totalSpins(N * M),
-          queue(default_selector_v)
+          queue(
+                #if FPGA_EMULATOR
+                    sycl::ext::intel::fpga_emulator_selector_v
+                #elif FPGA_SIMULATOR
+                    sycl::ext::intel::fpga_simulator_selector_v
+                #elif FPGA_HARDWARE
+                    sycl::ext::intel::fpga_selector_v
+                #else
+                    default_selector_v
+                #endif
+          )
     {
         spins      = malloc_shared<int>(totalSpins, queue);
         randomVals = malloc_shared<float>(totalSpins, queue);
