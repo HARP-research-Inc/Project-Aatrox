@@ -1,5 +1,6 @@
-// QuantumAnnealer2D.cpp
-// Modularized 2D Suzuki–Trotter annealer in C++/SYCL with optimized kernel synchronization
+// QannealerFullConnectivity_USM.cpp
+// Fully-connected Suzuki–Trotter Quantum Annealer using SYCL Unified Shared Memory
+// Includes energy logging, spin-board prints, and solution outputs
 
 #include <sycl/sycl.hpp>
 #include <vector>
@@ -9,160 +10,183 @@
 
 using namespace sycl;
 
-class QuantumAnnealer2D {
+class QuantumAnnealer {
 public:
-    QuantumAnnealer2D(int dimX, int dimY, int numTrotters, int numIters,
-                      float trotStart, float trotEnd,
-                      float spinCoupling,
-                      float tempStart, float tempEnd,
-                      float globalBiasStart = 0.0f)
-        : nx(dimX), ny(dimY), M(numTrotters), iterations(numIters),
-          Jt_start(trotStart), Jt_end(trotEnd),
-          J_spin(spinCoupling), T_start(tempStart), T_end(tempEnd),
-          h_global0(globalBiasStart),
-          totalSpins(nx * ny),
-          spins(totalSpins * M),
-          randomVals(totalSpins * M),
-          bufSpins(range<2>(totalSpins, M)),
-          bufRandom(range<2>(totalSpins, M)),
-          queue(default_selector{})
+    QuantumAnnealer(int numVars, int numTrotters, int numIters,
+                    float Jt_start, float Jt_end,
+                    float T_start, float T_end,
+                    const std::vector<float>& J_coupling,
+                    const std::vector<float>& h_bias = {})
+        : N(numVars), M(numTrotters), iterations(numIters),
+          Jt_start(Jt_start), Jt_end(Jt_end),
+          T_start(T_start), T_end(T_end),
+          totalSpins(N * M),
+          queue(default_selector_v)
     {
+        spins      = malloc_shared<int>(totalSpins, queue);
+        randomVals = malloc_shared<float>(totalSpins, queue);
+        Jmat       = malloc_shared<float>(N * N, queue);
+        Hb         = malloc_shared<float>(N, queue);
+
+        // Initialize coupling matrix and biases
+        for(int i = 0; i < N * N; ++i)
+            Jmat[i] = J_coupling[i];
+        for(int i = 0; i < N; ++i)
+            Hb[i] = (h_bias.empty() ? 0.0f : h_bias[i]);
+
         initSpins();
-        // Copy initial spins into buffer
-        {
-            auto acc = bufSpins.get_host_access();
-            for(int i=0;i<totalSpins;i++)
-                for(int t=0;t<M;t++)
-                    acc[i][t] = spins[i*M + t];
-        }
     }
 
-    void solve(int monitorInterval = 100) {
-        // Print initial energy
-        float E0 = calcEnergyHost(Jt_start);
-        std::cout << "Initial Energy = " << E0 << "\n";
+    ~QuantumAnnealer() {
+        free(spins, queue);
+        free(randomVals, queue);
+        free(Jmat, queue);
+        free(Hb, queue);
+    }
 
-        for(int iter = 1; iter <= iterations; ++iter) {
-            float lambda = float(iter) / float(iterations);
-            float Jt     = Jt_start + lambda * (Jt_end - Jt_start);
-            float T      = T_start  + lambda * (T_end  - T_start);
-            float hg     = h_global0 + lambda * (0.0f  - h_global0);
-            float Jspin  = J_spin;
-
-            // Refill random numbers on host
-            {
-                auto randHost = bufRandom.get_host_access();
-                std::uniform_real_distribution<float> dist(0.f,1.f);
-                for(int i = 0; i < totalSpins; ++i)
-                    for(int t = 0; t < M; ++t)
-                        randHost[i][t] = dist(rng);
-            }
-
-            // Copy locals to capture
-            int nx_ = nx, ny_ = ny, tot_ = totalSpins, M_ = M;
-            float Jt_ = Jt, T_ = T, hg_ = hg, Jspin_ = Jspin;
-
-            // Submit both parity kernels without intermediate waits
-            for(int parity = 0; parity < 2; ++parity) {
-                queue.submit([&](handler &h) {
-                    auto S = bufSpins.get_access<access::mode::read_write>(h);
-                    auto R = bufRandom.get_access<access::mode::read>(h);
-                    h.parallel_for(range<2>(tot_, M_), [=](id<2> idx) {
-                        int flat = idx[0], t = idx[1];
-                        if(((flat + t) & 1) != parity) return;
-                        int ix = flat / ny_, iy = flat % ny_;
-                        int ixm = (ix==0?nx_-1:ix-1), ixp=(ix+1)%nx_;
-                        int iym = (iy==0?ny_-1:iy-1), iyp=(iy+1)%ny_;
-                        int s_u = S[ix*ny_ + iyp][t], s_d = S[ix*ny_ + iym][t];
-                        int s_l = S[ixm*ny_ + iy][t], s_r = S[ixp*ny_ + iy][t];
-                        int t_prev = (t==0?M_-1:t-1), t_next=(t+1)%M_;
-                        int s_tp = S[flat][t_prev], s_tn=S[flat][t_next];
-                        float hloc = Jt_*(s_tp+s_tn) + Jspin_*(s_u+s_d+s_l+s_r) + hg_;
-                        float prob = 1.f / (1.f + sycl::exp(-2.f*hloc/T_));
-                        S[flat][t] = (R[flat][t] < prob ? +1 : -1);
-                    });
-                });
-            }
-            // Wait once after both parity passes
-            queue.wait();
-
-            if(iter % monitorInterval == 0 || iter == iterations) {
-                float Ecur = calcEnergyHost(Jt);
-                std::cout << "Energy at iteration " << iter << " = " << Ecur << "\n";
+    // Compute total energy: classical + quantum couplings
+    double computeEnergy(float Jt_current) {
+        double E = 0.0;
+        // Classical Ising energy over all trotter slices
+        for(int t = 0; t < M; ++t) {
+            for(int i = 0; i < N; ++i) {
+                int si = spins[i*M + t];
+                // bias term
+                E -= Hb[i] * si;
+                // pair interactions (i<j)
+                for(int j = i+1; j < N; ++j) {
+                    E -= Jmat[i*N + j] * si * spins[j*M + t];
+                }
             }
         }
-    }
-
-    std::vector<int> getSolution() {
-        // Copy final spins to host vector
-        std::vector<int> sol(totalSpins);
-        auto S = bufSpins.get_host_access();
-        for(int i=0;i<totalSpins;i++){
-            int sum=0;
-            for(int t=0;t<M;t++) sum += S[i][t];
-            sol[i] = (sum>=0?1:0);
-        }
-        return sol;
-    }
-
-    void printMatrix(const std::vector<int>& mat) const {
-        for(int x=0;x<nx;x++){
-            for(int y=0;y<ny;y++) std::cout<<mat[x*ny+y]<<' ';
-            std::cout<<"\n";
-        }
-    }
-
-private:
-    int nx, ny, M, iterations, totalSpins;
-    float Jt_start, Jt_end, J_spin, T_start, T_end, h_global0;
-
-    std::vector<int>   spins;
-    std::vector<float> randomVals;
-    buffer<int,2>      bufSpins;
-    buffer<float,2>    bufRandom;
-    queue              queue;
-    std::mt19937_64    rng{42};
-
-    void initSpins() {
-        std::uniform_int_distribution<int> dist(0,1);
-        for(int i=0;i<totalSpins*M;i++)
-            spins[i] = (dist(rng)? +1 : -1);
-    }
-
-    float calcEnergyHost(float Jt) {
-        float E=0;
-        auto S = bufSpins.get_host_access();
-        for(int flat=0;flat<totalSpins;flat++){
-            int ix=flat/ny, iy=flat%ny;
-            int ixp=(ix+1)%nx, ixm=(ix==0?nx-1:ix-1);
-            int iyp=(iy+1)%ny, iym=(iy==0?ny-1:iy-1);
-            for(int t=0;t<M;t++){
-                int si=S[flat][t];
-                int sip=S[ixp*ny+iy][t], sim=S[ixm*ny+iy][t];
-                int sjp=S[ix*ny+iyp][t], sjm=S[ix*ny+iym][t];
-                int tnp=(t+1)%M;
-                int stp=S[flat][tnp];
-                E += -Jt*si*stp;
-                E += -J_spin*si*(sip+sim+sjp+sjm);
+        // Quantum coupling energy between adjacent trotter slices
+        for(int t = 0; t < M; ++t) {
+            int t_next = (t + 1) % M;
+            for(int i = 0; i < N; ++i) {
+                E -= Jt_current * spins[i*M + t] * spins[i*M + t_next];
             }
         }
         return E;
     }
+
+    // Print the entire N x M spin matrix
+    void printSpins() {
+        for(int i = 0; i < N; ++i) {
+            for(int t = 0; t < M; ++t)
+                std::cout << (spins[i*M + t] > 0 ? "+1 " : "-1 ");
+            std::cout << "\n";
+        }
+    }
+
+    // Print the effective solution (majority vote over Trotter slices)
+    void printSolution() {
+        auto sol = getSolution();
+        for(int i = 0; i < N; ++i)
+            std::cout << (sol[i] > 0 ? "+1 " : "-1 ");
+        std::cout << "\n";
+    }
+
+    void solve(int numSweeps) {
+        std::mt19937 rng(std::random_device{}());
+        std::uniform_real_distribution<float> dist01(0.0f, 1.0f);
+
+        int n = N, m = M, total = totalSpins;
+        int* spins_ptr = spins;
+        float* rand_ptr = randomVals;
+        float* Jmat_ptr = Jmat;
+        float* Hb_ptr   = Hb;
+        float Jt_s = Jt_start, Jt_e = Jt_end;
+        float T_s  = T_start,  T_e  = T_end;
+        int iters = iterations;
+
+        // Log initial energy
+        double E0 = computeEnergy(Jt_s);
+        std::cout << "Sweep 0, Energy = " << E0 << "\n";
+
+        for(int sweep = 1; sweep <= numSweeps; ++sweep) {
+            float lambda = float(sweep) / float(iters);
+            float Jt_loc = Jt_s + lambda * (Jt_e - Jt_s);
+            float T_loc  = T_s  + lambda * (T_e  - T_s);
+            bool hasH    = (Hb_ptr != nullptr);
+
+            // Refill random numbers
+            for(int i = 0; i < total; ++i)
+                rand_ptr[i] = dist01(rng);
+
+            queue.submit([&](handler& cgh) {
+                cgh.parallel_for(range<2>(n, m), [=](item<2> id) {
+                    int i = id[0], t = id[1];
+                    int idx = i*m + t;
+                    float local_field = 0.0f;
+                    for(int j = 0; j < n; ++j)
+                        local_field += Jmat_ptr[i*n + j] * spins_ptr[j*m + t];
+                    int t_next = (t + 1) % m;
+                    int t_prev = (t + m - 1) % m;
+                    local_field += Jt_loc * (spins_ptr[i*m + t_next] + spins_ptr[i*m + t_prev]);
+                    if(hasH) local_field += Hb_ptr[i];
+                    int s = spins_ptr[idx];
+                    float deltaE = 2.0f * s * local_field;
+                    float r = rand_ptr[idx];
+                    if(deltaE < 0.0f || expf(-deltaE / T_loc) > r)
+                        spins_ptr[idx] = -s;
+                });
+            }).wait();
+
+            // Log energy each sweep
+            double E = computeEnergy(Jt_loc);
+            std::cout << "Sweep " << sweep << ", Energy = " << E << "\n";
+        }
+    }
+
+    std::vector<int> getSolution() {
+        std::vector<int> result(N);
+        for(int i = 0; i < N; ++i) {
+            int sum = 0;
+            for(int t = 0; t < M; ++t)
+                sum += spins[i*M + t];
+            result[i] = (sum >= 0 ? 1 : -1);
+        }
+        return result;
+    }
+
+private:
+    int N, M, iterations;
+    int totalSpins;
+    float Jt_start, Jt_end, T_start, T_end;
+    queue queue;
+    int* spins;
+    float* randomVals;
+    float* Jmat;
+    float* Hb;
+
+    void initSpins() {
+        std::mt19937 rng(std::random_device{}());
+        std::uniform_int_distribution<int> distBool(0, 1);
+        for(int i = 0; i < totalSpins; ++i)
+            spins[i] = distBool(rng) ? 1 : -1;
+    }
 };
 
-int main(){
-    int nx=32, ny=32;
-    QuantumAnnealer2D annealer(nx,ny,8,200,
-                                0.01f,0.2f,
-                                0.3f,
-                                1.0f,1e-4f,
-                                0.0f);
-    std::cout<<"Before:\n";
-    auto initSol=annealer.getSolution();
-    annealer.printMatrix(initSol);
-    annealer.solve(20);
-    std::cout<<"After:\n";
-    auto finalSol=annealer.getSolution();
-    annealer.printMatrix(finalSol);
+int main() {
+    // Demo: fully-connected ferromagnet on 5 spins
+    int N = 5, M = 8;
+    std::vector<float> J(N*N);
+    for(int i=0;i<N;i++) for(int j=0;j<N;j++)
+        J[i*N+j] = (i==j?0.0f:1.0f);
+    std::vector<float> h(N, 0.0f);
+
+    QuantumAnnealer qa(N, M, 100,
+                       0.01f, 0.2f, 1.0f, 1e-4f, J, h);
+
+    std::cout << "Initial spin board:\n";
+    qa.printSpins();
+    std::cout << "Initial solution:\n";
+    qa.printSolution();
+    qa.solve(100);
+    std::cout << "Final spin board:\n";
+    qa.printSpins();
+    std::cout << "Final solution:\n";
+    qa.printSolution();
+
     return 0;
 }
