@@ -1,6 +1,6 @@
 # Quantum Annealer Simulation in SYCL
 
-This repository contains a full Suzuki–Trotter quantum-inspired annealer implemented in C++/SYCL (OneAPI). It uses Glauber (heat‑bath) dynamics, a checkerboard update scheme, and an exponential cooling schedule to solve ferromagnetic Ising problems.
+A flexible C++/SYCL annealer implemented with Unified Shared Memory (USM) that directly ingests explicit QUBO definitions—separate linear (a) and quadratic (b) terms—automatically maps them to an Ising model, and runs a Suzuki–Trotter Metropolis Monte Carlo annealing schedule on any SYCL device. Detailed runtime reporting (spin boards, energy profiles, and extracted solutions) is provided for transparent debugging and performance analysis.
 
 ## Prerequisites
 
@@ -164,9 +164,12 @@ Currently the code is configured via compile‑time constants. To customize:
 
 ## Interpreting Output
 
-- **Spins BEFORE/AFTER**: shows Trotter slices with +/− spins
-- **E@k**: total energy at iteration *k*
-- **E_final**: final ground‑state energy
+- Spin Board: Displays the ±1 spin configurations for each logical variable (rows) across all Trotter slices (columns).
+- Solution: Extracts the final spin s_i for each variable by majority vote over Trotter slices, shown as ±1.
+- Energy Logs: Reports total energy (classical and quantum) at sweep 0 and after each sweep to illustrate convergence.
+- Mapping Back to Bits: Convert spins to binary values via x_i = (s_i + 1) / 2 for cost evaluation and downstream use
+
+These outputs enable tracing the annealing trajectory, verifying solution quality, and diagnosing performance for your QUBO model.
 
 ## Troubleshooting
 
