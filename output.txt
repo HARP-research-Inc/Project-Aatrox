@@ -1,117 +1,118 @@
+Running on device: AMD Ryzen 5 7600X 6-Core Processor             
 Initial spin board:
--1 -1 -1 -1 -1 -1 -1 +1 
--1 +1 +1 +1 -1 -1 +1 +1 
-+1 -1 +1 -1 -1 +1 -1 +1 
-+1 -1 +1 +1 +1 +1 -1 +1 
-+1 -1 -1 +1 +1 -1 +1 +1 
-Initial solution:
--1 +1 +1 +1 +1 
-Sweep 0, Energy = 0
-Sweep 1, Energy = -72.1904
-Sweep 2, Energy = -80.276
-Sweep 3, Energy = -80.314
-Sweep 4, Energy = -80.352
-Sweep 5, Energy = -80.39
-Sweep 6, Energy = -80.428
-Sweep 7, Energy = -80.466
-Sweep 8, Energy = -80.504
-Sweep 9, Energy = -80.542
-Sweep 10, Energy = -80.58
-Sweep 11, Energy = -80.618
-Sweep 12, Energy = -80.656
-Sweep 13, Energy = -80.694
-Sweep 14, Energy = -80.732
-Sweep 15, Energy = -80.77
-Sweep 16, Energy = -80.808
-Sweep 17, Energy = -80.846
-Sweep 18, Energy = -80.884
-Sweep 19, Energy = -80.922
-Sweep 20, Energy = -80.96
-Sweep 21, Energy = -80.998
-Sweep 22, Energy = -81.036
-Sweep 23, Energy = -81.074
-Sweep 24, Energy = -81.112
-Sweep 25, Energy = -81.15
-Sweep 26, Energy = -81.188
-Sweep 27, Energy = -81.226
-Sweep 28, Energy = -81.264
-Sweep 29, Energy = -81.302
-Sweep 30, Energy = -81.34
-Sweep 31, Energy = -81.378
-Sweep 32, Energy = -81.416
-Sweep 33, Energy = -81.454
-Sweep 34, Energy = -81.492
-Sweep 35, Energy = -81.53
-Sweep 36, Energy = -81.568
-Sweep 37, Energy = -81.606
-Sweep 38, Energy = -81.644
-Sweep 39, Energy = -81.682
-Sweep 40, Energy = -81.72
-Sweep 41, Energy = -81.758
-Sweep 42, Energy = -81.796
-Sweep 43, Energy = -81.834
-Sweep 44, Energy = -81.872
-Sweep 45, Energy = -81.91
-Sweep 46, Energy = -81.948
-Sweep 47, Energy = -81.986
-Sweep 48, Energy = -82.024
-Sweep 49, Energy = -82.062
-Sweep 50, Energy = -82.1
-Sweep 51, Energy = -82.138
-Sweep 52, Energy = -82.176
-Sweep 53, Energy = -82.214
-Sweep 54, Energy = -82.252
-Sweep 55, Energy = -82.29
-Sweep 56, Energy = -82.328
-Sweep 57, Energy = -82.366
-Sweep 58, Energy = -82.404
-Sweep 59, Energy = -82.442
-Sweep 60, Energy = -82.48
-Sweep 61, Energy = -82.518
-Sweep 62, Energy = -82.556
-Sweep 63, Energy = -82.594
-Sweep 64, Energy = -82.632
-Sweep 65, Energy = -82.67
-Sweep 66, Energy = -82.708
-Sweep 67, Energy = -82.746
-Sweep 68, Energy = -82.784
-Sweep 69, Energy = -82.822
-Sweep 70, Energy = -82.86
-Sweep 71, Energy = -82.898
-Sweep 72, Energy = -82.936
-Sweep 73, Energy = -82.974
-Sweep 74, Energy = -83.012
-Sweep 75, Energy = -83.05
-Sweep 76, Energy = -83.088
-Sweep 77, Energy = -83.126
-Sweep 78, Energy = -83.164
-Sweep 79, Energy = -83.202
-Sweep 80, Energy = -83.24
-Sweep 81, Energy = -83.278
-Sweep 82, Energy = -83.316
-Sweep 83, Energy = -83.354
-Sweep 84, Energy = -83.392
-Sweep 85, Energy = -83.43
-Sweep 86, Energy = -83.468
-Sweep 87, Energy = -83.506
-Sweep 88, Energy = -83.544
-Sweep 89, Energy = -83.582
-Sweep 90, Energy = -83.62
-Sweep 91, Energy = -83.658
-Sweep 92, Energy = -83.696
-Sweep 93, Energy = -83.734
-Sweep 94, Energy = -83.772
-Sweep 95, Energy = -83.81
-Sweep 96, Energy = -83.848
-Sweep 97, Energy = -83.886
-Sweep 98, Energy = -83.924
-Sweep 99, Energy = -83.962
-Sweep 100, Energy = -84
+-1 +1 -1 +1 +1 -1 +1 +1 
+-1 -1 -1 -1 -1 -1 -1 -1 
++1 +1 +1 +1 -1 -1 +1 -1 
+-1 +1 -1 +1 -1 +1 -1 +1 
++1 +1 -1 +1 +1 +1 +1 +1 
+Initial solution (spins):
++1 -1 +1 +1 +1 
+Sweep 0, Energy = -5
+Sweep 1, Energy = -3.8096
+Sweep 2, Energy = -10.8344
+Sweep 3, Energy = 1.0628
+Sweep 4, Energy = -8.9296
+Sweep 5, Energy = -9
+Sweep 6, Energy = -9.0856
+Sweep 7, Energy = -4.0932
+Sweep 8, Energy = -12
+Sweep 9, Energy = -11.5664
+Sweep 10, Energy = -10.536
+Sweep 11, Energy = -9
+Sweep 12, Energy = -9.1312
+Sweep 13, Energy = -11.306
+Sweep 14, Energy = -7.8536
+Sweep 15, Energy = -13.308
+Sweep 16, Energy = -11
+Sweep 17, Energy = -8.8308
+Sweep 18, Energy = -13
+Sweep 19, Energy = -9.6312
+Sweep 20, Energy = -10.384
+Sweep 21, Energy = -11.6008
+Sweep 22, Energy = -12.7928
+Sweep 23, Energy = -9.7852
+Sweep 24, Energy = -11
+Sweep 25, Energy = -9.54
+Sweep 26, Energy = -11.4752
+Sweep 27, Energy = -12.4904
+Sweep 28, Energy = -12.7584
+Sweep 29, Energy = -9
+Sweep 30, Energy = -12.804
+Sweep 31, Energy = -15.5512
+Sweep 32, Energy = -13.7168
+Sweep 33, Energy = -11.8724
+Sweep 34, Energy = -16.492
+Sweep 35, Energy = -15.612
+Sweep 36, Energy = -12.3136
+Sweep 37, Energy = -14.3212
+Sweep 38, Energy = -15.6576
+Sweep 39, Energy = -16.3456
+Sweep 40, Energy = -15.376
+Sweep 41, Energy = -15.4064
+Sweep 42, Energy = -16.0776
+Sweep 43, Energy = -17.834
+Sweep 44, Energy = -17.872
+Sweep 45, Energy = -17.91
+Sweep 46, Energy = -16.948
+Sweep 47, Energy = -16.986
+Sweep 48, Energy = -18.4288
+Sweep 49, Energy = -15.2372
+Sweep 50, Energy = -16.1
+Sweep 51, Energy = -17.138
+Sweep 52, Energy = -18.176
+Sweep 53, Energy = -16.6568
+Sweep 54, Energy = -15.3512
+Sweep 55, Energy = -15.374
+Sweep 56, Energy = -16.328
+Sweep 57, Energy = -16.366
+Sweep 58, Energy = -16.404
+Sweep 59, Energy = -19.4188
+Sweep 60, Energy = -19.472
+Sweep 61, Energy = -19.5252
+Sweep 62, Energy = -18.5784
+Sweep 63, Energy = -20.1504
+Sweep 64, Energy = -20.2112
+Sweep 65, Energy = -20.272
+Sweep 66, Energy = -20.3328
+Sweep 67, Energy = -20.3936
+Sweep 68, Energy = -19.8976
+Sweep 69, Energy = -20.5152
+Sweep 70, Energy = -20.576
+Sweep 71, Energy = -21.2164
+Sweep 72, Energy = -21.2848
+Sweep 73, Energy = -20.7584
+Sweep 74, Energy = -21.4216
+Sweep 75, Energy = -21.49
+Sweep 76, Energy = -21.5584
+Sweep 77, Energy = -21.6268
+Sweep 78, Energy = -21.6952
+Sweep 79, Energy = -21.1232
+Sweep 80, Energy = -21.184
+Sweep 81, Energy = -21.2448
+Sweep 82, Energy = -21.3056
+Sweep 83, Energy = -21.3664
+Sweep 84, Energy = -21.4272
+Sweep 85, Energy = -21.488
+Sweep 86, Energy = -21.5488
+Sweep 87, Energy = -21.6096
+Sweep 88, Energy = -21.6704
+Sweep 89, Energy = -21.7312
+Sweep 90, Energy = -21.792
+Sweep 91, Energy = -21.8528
+Sweep 92, Energy = -22.6528
+Sweep 93, Energy = -22.7212
+Sweep 94, Energy = -22.7896
+Sweep 95, Energy = -22.858
+Sweep 96, Energy = -22.9264
+Sweep 97, Energy = -22.9948
+Sweep 98, Energy = -23.0632
+Sweep 99, Energy = -23.1316
+Sweep 100, Energy = -23.2
 Final spin board:
-+1 -1 +1 +1 +1 +1 +1 +1 
-+1 -1 +1 +1 +1 +1 +1 +1 
-+1 -1 +1 +1 +1 +1 +1 +1 
-+1 -1 +1 +1 +1 +1 +1 +1 
-+1 -1 +1 +1 +1 +1 +1 +1 
-Final solution:
-+1 +1 +1 +1 +1 
+-1 -1 -1 -1 -1 -1 -1 -1 
++1 +1 +1 +1 +1 +1 +1 +1 
+-1 -1 -1 -1 -1 -1 -1 -1 
++1 +1 +1 +1 +1 +1 +1 +1 
++1 +1 -1 -1 -1 -1 +1 +1 
+Final solution (spins):
+-1 +1 -1 +1 +1 
